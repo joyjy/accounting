@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <title>Google Drive Realtime quickstart</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=9">
+
+  <!-- Load the Realtime libraries. -->
+  <script type="text/javascript"
+          src="https://apis.google.com/js/api.js"></script>
+
+  <!-- Load the utility library. -->
+  <script type="text/javascript"
+          src="realtime-client-utils.js"></script>
+</head>
+
+<!-- Start Realtime when the body has loaded. -->
+<body onLoad='startRealtime()'>
+
+  <h1>Drive Realtime API :: quickstart</h1>
+
+  <button id="authorizeButton" disabled>You must authorize</button>
+
+  <p>These text areas are on the same page. You can also <a target="_blank" href="#">open them on separate users'
+  browsers</a> and they will remain synchronized.</p>
+
+  <!-- Text areas that will be used as our collaborative controls. -->
+  <textarea id="editor1" rows="15" cols="50" disabled="true"></textarea>
+  <textarea id="editor2" rows="15" cols="50" disabled="true"></textarea>
+  <br />
+
+  <!-- Undo and redo buttons. -->
+  <button id="undoButton" disabled>Undo</button>
+  <button id="redoButton" disabled>Redo</button>
+
+  <script>
+    /**
+     * This function is called the first time that the Realtime model is created
+     * for a file. This function should be used to initialize any values of the
+     * model. In this case, we just create the single string model that will be
+     * used to control our text box. The string has a starting value of 'Hello
+     * Realtime World!', and is named 'text'.
+     * @param model {gapi.drive.realtime.Model} the Realtime root model object.
+     */
+    function initializeModel(model) {
+      var string = model.createString('Hello Realtime World!');
+      model.getRoot().set('text', string);
+    }
+
+    /**
+     * This function is called when the Realtime file has been loaded. It should
+     * be used to initialize any user interface components and event handlers
+     * depending on the Realtime model. In this case, create a text control binder
+     * and bind it to our string model that we created in initializeModel.
+     * @param doc {gapi.drive.realtime.Document} the Realtime document.
+     */
+    function onFileLoaded(doc) {
+      var string = doc.getModel().getRoot().get('text');
+
+      // Keeping one box updated with a String binder.
+      var textArea1 = document.getElementById('editor1');
+      gapi.drive.realtime.databinding.bindString(string, textArea1);
+
+      // Keeping one box updated with a custom EventListener.
+      var textArea2 = document.getElementById('editor2');
+      var updateTextArea2 = function(e) {
+        textArea2.value = string;
+      };
+      string.addEventListener(gapi.drive.realtime.EventType.TEXT_INSERTED, updateTextArea2);
+      string.addEventListener(gapi.drive.realtime.EventType.TEXT_DELETED, updateTextArea2);
+      textArea2.onkeyup = function() {
+        string.setText(textArea2.value);
+      };
+      updateTextArea2();
+
+      // Enabling UI Elements.
+      textArea1.disabled = false;
+      textArea2.disabled = false;
+
+      // Add logic for undo button.
+      var model = doc.getModel();
+      var undoButton = document.getElementById('undoButton');
+      var redoButton = document.getElementById('redoButton');
+
+      undoButton.onclick = function(e) {
+        model.undo();
+      };
+      redoButton.onclick = function(e) {
+        model.redo();
+      };
+
+      // Add event handler for UndoRedoStateChanged events.
+      var onUndoRedoStateChanged = function(e) {
+        undoButton.disabled = !e.canUndo;
+        redoButton.disabled = !e.canRedo;
+      };
+      model.addEventListener(gapi.drive.realtime.EventType.UNDO_REDO_STATE_CHANGED, onUndoRedoStateChanged);
+    }
+
+    /**
+     * Options for the Realtime loader.
+     */
+    var realtimeOptions = {
+      /**
+       * Client ID from the console.
+       */
+      clientId: '768702962048-bie9tm8f0ettcdi7gb1pb245q33l8cft.apps.googleusercontent.com',
+
+      /**
+       * The ID of the button to click to authorize. Must be a DOM element ID.
+       */
+      authButtonElementId: 'authorizeButton',
+
+      /**
+       * Function to be called when a Realtime model is first created.
+       */
+      initializeModel: initializeModel,
+
+      /**
+       * Autocreate files right after auth automatically.
+       */
+      autoCreate: true,
+
+      /**
+       * The name of newly created Drive files.
+       */
+      defaultTitle: "New Realtime Quickstart File",
+
+      /**
+       * The MIME type of newly created Drive Files. By default the application
+       * specific MIME type will be used:
+       *     application/vnd.google-apps.drive-sdk.
+       */
+      newFileMimeType: null, // Using default.
+
+      /**
+       * Function to be called every time a Realtime file is loaded.
+       */
+      onFileLoaded: onFileLoaded,
+
+      /**
+       * Function to be called to inityalize custom Collaborative Objects types.
+       */
+      registerTypes: null, // No action.
+
+      /**
+       * Function to be called after authorization and before loading files.
+       */
+      afterAuth: null // No action.
+    }
+
+    /**
+     * Start the Realtime loader with the options.
+     */
+    function startRealtime() {
+      var realtimeLoader = new rtclient.RealtimeLoader(realtimeOptions);
+      realtimeLoader.start();
+    }
+
+  </script>
+</body>
+</html>
