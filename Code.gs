@@ -11,6 +11,7 @@ function onOpen() {
       .addToUi();
 }
 
+var accountCategoryColumns = ['A']
 var accountColumns = ['F'];
 var inColumns = ['J','K'];
 var outColumns = ['L','M','N'];
@@ -35,22 +36,15 @@ function createAccountSheet(){
     var f = '=iferror(if(B'+row+'<0,B'+row+'/sumif(B:B,"<0"),B'+row+'/sumif(B:B,">=0")),0)';
     accountSheet.getRange(row, 3).setValue(f);
   }
+  newAccountValidation(accountSheet,3);
   accountSheet.getRange('B:B').setNumberFormat('¥0.00');
   accountSheet.getRange('C:C').setNumberFormat('0.00%');
   
   // 帐户表
   accountSheet.getRange(1, 5).setValue('账户');
   setRowValues(accountSheet, 2, 5, ['类型','名称','余额','分布']); 
-  var cell = accountSheet.getRange('A3:A'+row);
-  var rule = SpreadsheetApp.newDataValidation().requireValueInRange(cell).build();
-  accountSheet.getRange('E3').setDataValidation(rule);
-  if(findSheet('流水')){
-    var f="=sumif('流水'!F:F,F3,'流水'!D:D)-sumif('流水'!H:H,F3,'流水'!D:D)";
-    Logger.log(f);
-    accountSheet.getRange('G3').setValue(f);
-  }
+  
   accountSheet.getRange('G:G').setNumberFormat('¥0.00');
-  accountSheet.getRange('H3').setValue('=iferror(G3/sumif(E:E,E3,G:G),0)')
   accountSheet.getRange('H:H').setNumberFormat('0.00%');
   
   //
@@ -84,24 +78,54 @@ function createCashSheet(){
   cashSheet.setColumnWidth(7, 20);
 }
 
+// 当任意单元格更新时回调
 function onEdit(){
   var sheet = SpreadsheetApp.getActiveSheet();
   if(sheet.getName() == '流水'){
     newCash(sheet, sheet.getActiveCell());
+  } else if(sheet.getName() == '账户'){
+    newAccount(sheet, sheet.getActiveCell());
   }
+}
+
+// 新建账户
+function newAccount(accountSheet, cell){
+  Logger.log('newAccount: '+cell.getRow()+","+cell.getColumn())
+  var row = cell.getRow();
+  
+  if(cell.getColumn() == 6){
+    // 如果类型已选，不更新行
+    if(accountSheet.getRange(row, 5).getValue() != ''){
+      return;
+    }
+    
+    newAccountValidation(accountSheet, row);
+  }
+  
+}
+
+// 自动填充账户前后列
+function newAccountValidation(accountSheet, row){
+  var cell = accountSheet.getRange(getLastRange(accountSheet, accountCategoryColumns, 3));
+  var rule = SpreadsheetApp.newDataValidation().requireValueInRange(cell).build();
+  accountSheet.getRange('E'+row).setDataValidation(rule);
+  if(findSheet('流水')){
+    var f="=sumif('流水'!F:F,F"+row+",'流水'!D:D)-sumif('流水'!H:H,F"+row+",'流水'!D:D)";
+    accountSheet.getRange('G'+row).setValue(f);
+  }
+  accountSheet.getRange('H'+row).setValue('=iferror(G'+row+'/sumif(E:E,E'+row+',G:G),0)')
 }
 
 // 新建流水项
 function newCash(cashSheet, cell){
-  Logger.log(cell.getRow()+","+cell.getColumn())
+  Logger.log('newCash: '+cell.getRow()+","+cell.getColumn())
   
   var row = cell.getRow();
   var accountSheet = findSheet('账户');
   
   if(cell.getColumn() == 2){
-    
     // 如果金额已填，不更新行
-    if(cashSheet.getRange(row, 4).getValue() != ""){
+    if(cashSheet.getRange(row, 4).getValue() != ''){
       return;
     }
     
@@ -143,7 +167,7 @@ function newBudget(){
   var budgetSheet = findSheet('预算');
   
   if(budgetSheet == undefined){
-    var budgetSheet = ss.insertSheet('预算');
+    var budgetSheet = SpreadsheetApp.insertSheet('预算');
   }
   
   var lastRow = budgetSheet.getLastRow();
@@ -160,6 +184,7 @@ function appendBudget(sheet, row){
   cell.setValue(nextMonth+'月');
 }
 
+// 获取表
 function findSheet(name){
   var sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
   for(var i=0; i < sheets.length; i++){
@@ -169,28 +194,29 @@ function findSheet(name){
   }
 }
 
+// 为行填充值
 function setRowValues(sheet, row, column, values){
   for(var i=0; i<values.length; i++){
     sheet.getRange(row, column+i).setValue(values[i]);
   }
 }
 
+// 为列填充值
 function setColumnValues(sheet, row, column, values){
   for(var i=0; i<values.length; i++){
     sheet.getRange(row+i, column).setValue(values[i]);
   }
 }
 
+// 获取指定行列有值的范围
 function getLastRange(sheet, colNames, startRow){
   var endRow = startRow;
   for(var i = 0; i< colNames.length; i++){
     var temp = sheet.getRange(colNames[i]+':'+colNames[i]).getValues().length;
-    Logger.log(colNames[i]+":"+temp);
     if(temp > endRow){
       endRow = temp;
     }
   }
   
-  Logger.log(colNames[0]+startRow+':'+colNames[colNames.length-1]+endRow);
   return colNames[0]+startRow+':'+colNames[colNames.length-1]+endRow;
 }
