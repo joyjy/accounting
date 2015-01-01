@@ -75,6 +75,8 @@ function createCashSheet(){
   
   cashSheet.appendRow(['日期','出入','类型','金额','说明','账户']);
   
+  cashSheet.getRange('D:D').setNumberFormat('¥0.00');
+  
   var rule = SpreadsheetApp.newDataValidation().requireValueInList(['支出','转账','收入']).build();
   cashSheet.getRange('B:B').setDataValidation(rule);
   cashSheet.getRange('B1').clearDataValidations();
