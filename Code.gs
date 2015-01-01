@@ -7,7 +7,7 @@ function onOpen() {
       .createMenu('记账')
       .addItem('初始化流水表', 'createCashSheet')
       .addItem('初始化账户表', 'createAccountSheet')
-      //.addItem('新建预算', 'newBudget')
+      //.addItem('新预算', 'newBudget')
       .addToUi();
 }
 
@@ -16,7 +16,7 @@ var accountColumns = ['F'];
 var inColumns = ['J','K'];
 var outColumns = ['L','M','N'];
 
-//  创建帐户表
+// 创建帐户表
 function createAccountSheet(){
   if(findSheet('账户')){
     return;
@@ -163,25 +163,91 @@ function newCash(cashSheet, cell){
   }
 }
 
+// 如果没有预算表则新建
 function newBudget(){
   var budgetSheet = findSheet('预算');
   
   if(budgetSheet == undefined){
-    var budgetSheet = SpreadsheetApp.insertSheet('预算');
+    var budgetSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('预算');
   }
   
   var lastRow = budgetSheet.getLastRow();
-  
   appendBudget(budgetSheet, lastRow == 0 ? 1:lastRow+2);
+  if(lastRow == 0){
+    budgetSheet.setColumnWidth(1, 20);
+  }
 }
 
+// 追加预算
 function appendBudget(sheet, row){
-  var nextMonth = new Date().getMonth()+1;
-  if(nextMonth == 12) nextMonth = 0;
-  nextMonth+=1;
+  sheet.activate();
   
-  var cell = sheet.getRange(row, 1);
-  cell.setValue(nextMonth+'月');
+  var time = Utilities.formatDate(new Date(), SpreadsheetApp.getActive().getSpreadsheetTimeZone(), "MM月");
+  setRowValues(sheet, row, 1, ['#',time,'','预算','实际','差额']);
+  sheet.getRange(2, 4).setValue(0);
+  sheet.getRange('D:F').setNumberFormat('¥0.00');
+  
+  var index = row+1;
+  setColumnValues(sheet, index, 1, ['','-']);
+  sheet.getRange(index, 5).setValue("=sumif('流水'!B:B,\"收入\",'流水'!D:D)"); // TODO
+  
+  var accountSheet = findSheet('账户');
+  var fixRow = getLastRow(accountSheet, ['L'], 2);
+  if(fixRow > 2){
+    setColumnValues(sheet, index++, 2, ['收入','固定支出']);
+    copy(accountSheet, getLastRange(accountSheet, ['L'], 3), sheet, index, 3);
+    var f = 'D'+index+':';
+    index += fixRow-3 ;
+    f += 'D'+index++;
+  }
+  
+  setColumnValues(sheet, index, 2, ['可支配收入','常规支出']);
+  if(f){
+    sheet.getRange(index, 4).setValue('=D2-sum('+f+')');
+  }
+  index++;
+  
+  var startRow = index;
+  
+  var regularRow = getLastRow(accountSheet, ['M'], 3);
+  copy(accountSheet, getLastRange(accountSheet, ['M'], 3, regularRow), sheet, index, 3);
+  var f = 'D'+index+':';
+  index += regularRow-3;
+  f += 'D'+index++;
+  
+  setColumnValues(sheet, index, 2, ['其他支出']);
+  var otherRow = getLastRow(accountSheet, ['N'], 3);
+  copy(accountSheet, getLastRange(accountSheet, ['N'], 3, otherRow), sheet, index, 3);
+  var f = 'D'+index+':';
+  index += otherRow-3;
+  f += 'D'+index;
+  
+  var endRow = index++;
+  
+  setColumnValues(sheet, index, 2, ['总计']);
+  setColumnValues(sheet, index, 4, ['=sum(D'+startRow+':D'+endRow+')']);
+  
+  setColumnValues(sheet, index+1, 2, ['结余']);
+  setColumnValues(sheet, index+1, 4, ['=D'+(startRow-1)+'-D'+index]);
+  
+  //var monthSpan = '1/1/2015 - 1/31/2015'
+  //if(cell != undefined){
+  //  var lastMonthSpan = sheet.getRange(cell.getRow(), cell.getColumn()+1).getValue();
+  //  monthSpan = lastMonthSpan;
+  //}
+  
+  //var nextMonth = new Date().getMonth()+1;
+  //if(nextMonth == 12) nextMonth = 0;
+  //nextMonth+=1;
+  
+  //var cell = sheet.getRange(row, 1);
+  //cell.setValue(nextMonth+'月');
+}
+
+function copy(fromSheet, rangeName, targetSheet, row, column){
+  Logger.log("copy from: " + rangeName);
+  var range = fromSheet.getRange(rangeName);
+  range.copyTo(targetSheet.getRange(row, column));
 }
 
 // 获取表
@@ -209,14 +275,26 @@ function setColumnValues(sheet, row, column, values){
 }
 
 // 获取指定行列有值的范围
-function getLastRange(sheet, colNames, startRow){
+function getLastRange(sheet, colNames, startRow, endRow){
+  if(endRow == undefined){
+    endRow = getLastRow(sheet, colNames, startRow);
+  }
+  return colNames[0]+startRow+':'+colNames[colNames.length-1]+endRow;
+}
+
+// 获取指定列最后有值的行
+function getLastRow(sheet, colNames, startRow){
   var endRow = startRow;
   for(var i = 0; i< colNames.length; i++){
-    var temp = sheet.getRange(colNames[i]+':'+colNames[i]).getValues().length;
+    var values = sheet.getRange(colNames[i]+':'+colNames[i]).getValues();
+    for(var j=startRow; j< values.length; j++)
+    {
+      if(values[j] == '') break;
+    }
+    var temp = j;
     if(temp > endRow){
       endRow = temp;
     }
   }
-  
-  return colNames[0]+startRow+':'+colNames[colNames.length-1]+endRow;
+  return endRow;
 }
