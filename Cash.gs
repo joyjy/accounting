@@ -61,5 +61,11 @@ function newCash(cashSheet, cell){
       cashSheet.getRange('G'+row).setValue('<-');
       cashSheet.getRange('H'+row).setDataValidation(rule);
     }
+    
+    return;
+  }
+  
+  if(cell.getColumn() == 1){
+    Logger.log(cell.getRow());
   }
 }

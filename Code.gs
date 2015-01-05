@@ -18,6 +18,8 @@ function onEdit(){
     newCash(sheet, sheet.getActiveCell());
   } else if(sheet.getName() == '账户'){
     newAccount(sheet, sheet.getActiveCell());
+  } else if(sheet.getName() == '预算'){
+    updateBudget(sheet, sheet.getActiveCell());
   }
 }
 
