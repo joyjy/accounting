@@ -31,7 +31,7 @@ function newCash(cashSheet, cell){
     }
     
     // 自动添加日期
-    var time = Utilities.formatDate(new Date(), SpreadsheetApp.getActive().getSpreadsheetTimeZone(), "yyyy-MM-dd");
+    var time =formatDate(new Date());
     cashSheet.getRange(row, 1).setValue(time);
     
     // 根据 cell.getValue() 为类型（C列）添加不同DataValidation
@@ -61,11 +61,5 @@ function newCash(cashSheet, cell){
       cashSheet.getRange('G'+row).setValue('<-');
       cashSheet.getRange('H'+row).setDataValidation(rule);
     }
-    
-    return;
-  }
-  
-  if(cell.getColumn() == 1){
-    Logger.log(cell.getRow());
   }
 }

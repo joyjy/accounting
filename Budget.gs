@@ -19,22 +19,25 @@ function newBudget(){
   }
 }
   
-var sumif = "=sumif('流水'!B:B,{},'流水'!D:D)";
+var inSumif;
+var outSumif;
 
 // 追加预算
 function appendBudget(sheet, row){
   sheet.activate();
   
   var month = new Date().getMonth();
-  var startDate = new Date(2015, month+1, 1);
-  var endDate = new Date(2015, month+2, 0);
+  var startDate = formatDate(new Date(2015, month+1, 1));
+  var endDate = formatDate(new Date(2015, month+2, 0));
   
   setRowValues(sheet, row, 1, ['#',startDate,endDate,'预算','实际','差额']);
+  inSumif = "=sumifs('流水'!D:D,'流水'!B:B,\"收入\",'流水'!A:A,\">="+startDate+"\",'流水'!A:A,\"<="+endDate+"\")"
+  outSumif = "=-sumifs('流水'!D:D,'流水'!B:B,\"支出\",'流水'!C:C,C{},'流水'!A:A,\">="+startDate+"\",'流水'!A:A,\"<="+endDate+"\")"
   
   var index = row+1;
   setColumnValues(sheet, index, 1, ['','-']);
   sheet.getRange(index, 4).setValue(0);
-  sheet.getRange(index, 5).setValue(sumif.replace('{}','"收入"'));
+  sheet.getRange(index, 5).setValue(inSumif);
   sheet.getRange(index, 6).setValue('=-(D'+index+'-E'+index+')');
   
   var accountSheet = findSheet('账户');
@@ -86,10 +89,33 @@ function outBudget(accountSheet, defColumns, budgetSheet, index){
   
   var count = lastRow-2;
   setColumnValues(budgetSheet, index, 4, fill(0, count))
-  setColumnValues(budgetSheet, index, 5, fill(sumif.replace('{}','C{}'), count, index));
+  setColumnValues(budgetSheet, index, 5, fill(outSumif, count, index));
   setColumnValues(budgetSheet, index, 6, fill("=D{}-E{}", count, index));
   return index + count;
 }
 
 function updateBudget(sheet, cell){
+      
+  var row = cell.getRow();
+  
+  if(sheet.getRange(row,1).getValue() == '#' && cell.getColumn() == 3){
+    var startDate = formatDate(sheet.getRange(row, 2).getValue());
+    var endDate = formatDate(cell.getValue());
+
+    inSumif = "=sumifs('流水'!D:D,'流水'!B:B,\"收入\",'流水'!A:A,\">="+startDate+"\",'流水'!A:A,\"<="+endDate+"\")"
+    outSumif = "=-sumifs('流水'!D:D,'流水'!B:B,\"支出\",'流水'!C:C,C{},'流水'!A:A,\">="+startDate+"\",'流水'!A:A,\"<="+endDate+"\")"
+    
+    for(var i=row+1; true; i++){
+      var range = sheet.getRange(i, 5);
+      if(range.getValue() === ''){
+        break;
+      }
+      
+      if(range.getBackground() == '#b6d7a8'){
+        range.setValue(inSumif);
+      } else if(range.getBackground() == '#f4cccc') {
+        range.setValue(outSumif.replace('{}', i));
+      }
+    }
+  }
 }

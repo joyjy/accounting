@@ -7,7 +7,7 @@ function onOpen() {
       .createMenu('记账')
       .addItem('初始化流水表', 'createCashSheet')
       .addItem('初始化账户表', 'createAccountSheet')
-      //.addItem('新预算', 'newBudget')
+      .addItem('新预算', 'newBudget')
       .addToUi();
 }
 
@@ -90,4 +90,8 @@ function fill(value, size, row){
     }
   }
   return array;
+}
+
+function formatDate(date){
+  return Utilities.formatDate(date, SpreadsheetApp.getActive().getSpreadsheetTimeZone(), "yyyy-MM-dd");
 }
