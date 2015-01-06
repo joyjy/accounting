@@ -8,11 +8,12 @@ function onOpen() {
     .addItem('初始化流水表', 'createCashSheet')
     .addItem('初始化账户表', 'createAccountSheet')
     .addItem('新预算', 'newBudget')
-    //.addSeparator()
-    //.addSubMenu(ui.createMenu('招商')
-    //               .addItem('信用卡债务','balance')
-    //               .addItem('还款方案对比', 'repayments'))
+    .addSeparator()
+    .addSubMenu(ui.createMenu('招商银行')
+                   .addItem('还款计算器', 'repaymentCalculator'))
     .addToUi();
+  
+  refreshRepaymentCalculator();
 }
 
 // 当任意单元格更新时回调
@@ -96,6 +97,14 @@ function fill(value, size, row){
   return array;
 }
 
+function mergeValue(array1, array2){
+  for(var i=0; i<array1.length; i++){
+    array1[i] = array1[i]+array2[i];
+  }
+  return array1;
+}
+
+// 格式化日期
 function formatDate(date){
   return Utilities.formatDate(date, SpreadsheetApp.getActive().getSpreadsheetTimeZone(), "yyyy-MM-dd");
 }
