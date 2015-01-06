@@ -57,7 +57,7 @@ function appendBudget(sheet, row){
   setRowValues(sheet, index, 1, ["'=",'可支配收入']);
   if(f){
     sheet.getRange(index, 4).setValue('=D2-sum('+f+')');
-    sheet.getRange(index, 5).setValue('=D2-sum('+f+')');
+    sheet.getRange(index, 5).setValue('=E2-sum('+f.replace(/D/g,'E')+')');
     sheet.getRange(index, 6).setValue('=-(D'+index+'-E'+index+')');
   }
   
@@ -111,9 +111,9 @@ function updateBudget(sheet, cell){
         break;
       }
       
-      if(range.getBackground() == '#b6d7a8'){
+      if(i==row+1){
         range.setValue(inSumif);
-      } else if(range.getBackground() == '#f4cccc' && range.getValue() != '') {
+      } else if(range.getBackground() == '#f4cccc' && sheet.getRange(i, 3).getValue() != '') {
         range.setValue(outSumif.replace('{}', i));
       }
     }
