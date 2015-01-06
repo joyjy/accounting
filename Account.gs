@@ -36,7 +36,7 @@ function createAccountSheet(){
   
   //
   setColumnValues(accountSheet, 1, 10, ['收入','固定收入','工资']);
-  setColumnValues(accountSheet, 2, 11, ['其他收入','奖金','投资','其他']);
+  setColumnValues(accountSheet, 2, 11, ['其他收入','奖金','利息','投资','其他']);
   setColumnValues(accountSheet, 1, 12, ['支出','固定支出','房贷']);
   setColumnValues(accountSheet, 2, 13, ['常规支出','饮食','水电日用','通信','交通']);
   setColumnValues(accountSheet, 2, 14, ['其他支出','衣帽鞋包','社交娱乐','网络数码','阅读','健身','其他']);

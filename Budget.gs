@@ -113,7 +113,7 @@ function updateBudget(sheet, cell){
       
       if(range.getBackground() == '#b6d7a8'){
         range.setValue(inSumif);
-      } else if(range.getBackground() == '#f4cccc') {
+      } else if(range.getBackground() == '#f4cccc' && range.getValue() != '') {
         range.setValue(outSumif.replace('{}', i));
       }
     }

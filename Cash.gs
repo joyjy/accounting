@@ -26,7 +26,8 @@ function newCash(cashSheet, cell){
   
   if(cell.getColumn() == 2){
     // 如果金额已填，不更新行
-    if(cashSheet.getRange(row, 4).getValue() != ''){
+    var moneyRange = cashSheet.getRange(row, 4);
+    if(moneyRange.getValue() != ''){
       return;
     }
     
@@ -35,19 +36,26 @@ function newCash(cashSheet, cell){
     cashSheet.getRange(row, 1).setValue(time);
     
     // 根据 cell.getValue() 为类型（C列）添加不同DataValidation
-    cashSheet.getRange('C'+row+':C'+row).clear();
-    cashSheet.getRange('C'+row+':C'+row).clearDataValidations();
+    var typeRange = cashSheet.getRange(row, 3);
+    
+    typeRange.clear();
+    typeRange.clearDataValidations();
     var rangeColumnName;
     if(cell.getValue() == '支出'){
       rangeColumnName = getLastRange(accountSheet, outColumns, 3);
+      moneyRange.setFontColor('#cc0000');
     }else if(cell.getValue() == '收入'){
       rangeColumnName = getLastRange(accountSheet, inColumns, 3);
+      moneyRange.setFontColor('#6aa84f');
+    }else{
+      moneyRange.setFontColor('#f1c232');
     }
     if(rangeColumnName != undefined){      
       var range = accountSheet.getRange(rangeColumnName);
       var rule = SpreadsheetApp.newDataValidation().requireValueInRange(range);
-      cashSheet.getRange('C'+row+':C'+row).setDataValidation(rule);
+      typeRange.setDataValidation(rule);
     }
+    
     
     // 添加目标账户（F列）DataValidation
     var range = accountSheet.getRange(getLastRange(accountSheet, accountColumns, 3));

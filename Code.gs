@@ -3,12 +3,16 @@ function onInstall(e) {
 }
 
 function onOpen() {
-  SpreadsheetApp.getUi()
-      .createMenu('记账')
-      .addItem('初始化流水表', 'createCashSheet')
-      .addItem('初始化账户表', 'createAccountSheet')
-      .addItem('新预算', 'newBudget')
-      .addToUi();
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu('记账')
+    .addItem('初始化流水表', 'createCashSheet')
+    .addItem('初始化账户表', 'createAccountSheet')
+    .addItem('新预算', 'newBudget')
+    //.addSeparator()
+    //.addSubMenu(ui.createMenu('招商')
+    //               .addItem('信用卡债务','balance')
+    //               .addItem('还款方案对比', 'repayments'))
+    .addToUi();
 }
 
 // 当任意单元格更新时回调
