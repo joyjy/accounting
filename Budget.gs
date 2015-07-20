@@ -106,15 +106,17 @@ function updateBudget(sheet, cell){
     outSumif = "=-sumifs('流水'!D:D,'流水'!B:B,\"支出\",'流水'!C:C,C{},'流水'!A:A,\">="+startDate+"\",'流水'!A:A,\"<="+endDate+"\")"
     
     for(var i=row+1; true; i++){
-      var range = sheet.getRange(i, 5);
-      if(range.getValue() === ''){
-        break;
+      
+      var range = sheet.getRange(i, cell.getColumn()+2);
+      if(range.getBackground() == '#b6d7a8'){
+        range.setValue(inSumif);
+      } else if(range.getBackground() == '#f4cccc') {
+        range.setValue(outSumif.replace('{}', i));
       }
       
-      if(i==row+1){
-        range.setValue(inSumif);
-      } else if(range.getBackground() == '#f4cccc' && sheet.getRange(i, 3).getValue() != '') {
-        range.setValue(outSumif.replace('{}', i));
+      var flag = sheet.getRange(i+1, cell.getColumn());
+      if(flag.getValue() === ''){
+        break;
       }
     }
   }
